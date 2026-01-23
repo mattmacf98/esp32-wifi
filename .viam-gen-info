@@ -1,0 +1,13 @@
+{
+  "module_name": "esp32-wifi",
+  "namespace": "mattmacf",
+  "language": "go",
+  "resource_type": "component",
+  "resource_subtype": "board",
+  "model_name": "esp32-wifi",
+  "enable_cloud_build": true,
+  "initialize_git": false,
+  "generator_version": "0.1.0",
+  "generated_on": "2026-01-23T17:16:20.502505Z",
+  "module_readme_link": "README.md"
+}
