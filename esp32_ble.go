@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	Esp32Ble         = resource.NewModel("mattmacf", "hello-world", "esp32-ble")
+	Esp32Ble         = resource.NewModel("mattmacf", "esp32-wifi", "esp32-ble")
 	errUnimplemented = errors.New("unimplemented")
 	adapter          = bluetooth.DefaultAdapter
 )

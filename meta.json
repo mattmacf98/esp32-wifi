@@ -2,8 +2,19 @@
   "$schema": "https://dl.viam.dev/module.schema.json",
   "module_id": "mattmacf:esp32-wifi",
   "visibility": "public",
-  "url": "",
+  "url": "https://github.com/mattmacf98/esp32-wifi",
   "description": "Modular board component: esp32-wifi",
+  "models": [
+    {
+      "api": "rdk:component:board",
+      "model": "mattmacf:esp32-wifi:esp32-wifi",
+      "markdown_link": "mattmacf_esp32-wifi_esp32-wifi.md"
+    },
+    {
+      "api": "rdk:component:board",
+      "model": "mattmacf:hello-world:esp32-ble"
+    }
+  ],
   "applications": null,
   "markdown_link": "README.md",
   "entrypoint": "bin/esp32-wifi",

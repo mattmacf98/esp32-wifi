@@ -5,6 +5,7 @@ go 1.25.1
 require (
 	go.viam.com/api v0.1.513
 	go.viam.com/rdk v0.110.0
+	tinygo.org/x/bluetooth v0.14.0
 )
 
 require (
@@ -209,5 +210,4 @@ require (
 	gorgonia.org/vecf32 v0.9.0 // indirect
 	gorgonia.org/vecf64 v0.9.0 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
-	tinygo.org/x/bluetooth v0.14.0 // indirect
 )
