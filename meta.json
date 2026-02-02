@@ -12,7 +12,7 @@
     },
     {
       "api": "rdk:component:board",
-      "model": "mattmacf:hello-world:esp32-ble"
+      "model": "mattmacf:esp32-wifi:esp32-ble"
     }
   ],
   "applications": null,
