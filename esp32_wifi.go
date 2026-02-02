@@ -21,13 +21,13 @@ var (
 
 func init() {
 	resource.RegisterComponent(board.API, Esp32Wifi,
-		resource.Registration[board.Board, *Config]{
+		resource.Registration[board.Board, *WifiConfig]{
 			Constructor: newEsp32WifiEsp32Wifi,
 		},
 	)
 }
 
-type Config struct {
+type WifiConfig struct {
 	Url string `json:"url"`
 }
 
@@ -41,7 +41,7 @@ type Config struct {
 // where this resource appears in the machine's JSON configuration
 // (for example, "components.0"). You can use it in error messages
 // to indicate which resource has a problem.
-func (cfg *Config) Validate(path string) ([]string, []string, error) {
+func (cfg *WifiConfig) Validate(path string) ([]string, []string, error) {
 	if cfg.Url == "" {
 		return nil, nil, fmt.Errorf("%s: missing required field 'url'", path)
 	}
@@ -54,7 +54,7 @@ type esp32WifiEsp32Wifi struct {
 	name resource.Name
 
 	logger logging.Logger
-	cfg    *Config
+	cfg    *WifiConfig
 	url    string
 
 	cancelCtx  context.Context
@@ -62,7 +62,7 @@ type esp32WifiEsp32Wifi struct {
 }
 
 func newEsp32WifiEsp32Wifi(ctx context.Context, deps resource.Dependencies, rawConf resource.Config, logger logging.Logger) (board.Board, error) {
-	conf, err := resource.NativeConfig[*Config](rawConf)
+	conf, err := resource.NativeConfig[*WifiConfig](rawConf)
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func newEsp32WifiEsp32Wifi(ctx context.Context, deps resource.Dependencies, rawC
 
 }
 
-func NewEsp32Wifi(ctx context.Context, deps resource.Dependencies, name resource.Name, conf *Config, logger logging.Logger) (board.Board, error) {
+func NewEsp32Wifi(ctx context.Context, deps resource.Dependencies, name resource.Name, conf *WifiConfig, logger logging.Logger) (board.Board, error) {
 
 	cancelCtx, cancelFunc := context.WithCancel(context.Background())
 
@@ -93,7 +93,7 @@ func (s *esp32WifiEsp32Wifi) Name() resource.Name {
 // AnalogByName returns an analog pin by name.
 func (s *esp32WifiEsp32Wifi) AnalogByName(name string) (board.Analog, error) {
 	var analogRetVal board.Analog
-	analogRetVal = &analogClient{
+	analogRetVal = &wifiAnalogClient{
 		esp32WifiEsp32Wifi: s,
 		boardName:          s.name.ShortName(),
 		analogName:         name,
@@ -112,7 +112,7 @@ func (s *esp32WifiEsp32Wifi) DigitalInterruptByName(name string) (board.DigitalI
 // GPIOPinByName returns a GPIOPin by name.
 func (s *esp32WifiEsp32Wifi) GPIOPinByName(name string) (board.GPIOPin, error) {
 	var gPIOPinRetVal board.GPIOPin
-	gPIOPinRetVal = &gpioPinClient{
+	gPIOPinRetVal = &wifiGPIOPinClient{
 		esp32WifiEsp32Wifi: s,
 		boardName:          s.name.ShortName(),
 		pinName:            name,
@@ -132,13 +132,13 @@ func (s *esp32WifiEsp32Wifi) DoCommand(ctx context.Context, cmd map[string]inter
 	return nil, fmt.Errorf("DoCommand not implemented")
 }
 
-type analogClient struct {
+type wifiAnalogClient struct {
 	*esp32WifiEsp32Wifi
 	boardName  string
 	analogName string
 }
 
-func (s *analogClient) Read(ctx context.Context, extra map[string]interface{}) (board.AnalogValue, error) {
+func (s *wifiAnalogClient) Read(ctx context.Context, extra map[string]interface{}) (board.AnalogValue, error) {
 	var analogValueRetVal board.AnalogValue
 	endpoint := fmt.Sprintf("%s/read-pins", s.url)
 	pinNum, err := strconv.Atoi(s.analogName)
@@ -188,17 +188,17 @@ func (s *analogClient) Read(ctx context.Context, extra map[string]interface{}) (
 	}, nil
 }
 
-func (s *analogClient) Write(ctx context.Context, value int, extra map[string]interface{}) error {
+func (s *wifiAnalogClient) Write(ctx context.Context, value int, extra map[string]interface{}) error {
 	return fmt.Errorf("Write not implemented")
 }
 
-type digitalInterruptClient struct {
+type wifiDigitalInterruptClient struct {
 	*esp32WifiEsp32Wifi
 	boardName            string
 	digitalInterruptName string
 }
 
-func (s *digitalInterruptClient) Value(ctx context.Context, extra map[string]interface{}) (int64, error) {
+func (s *wifiDigitalInterruptClient) Value(ctx context.Context, extra map[string]interface{}) (int64, error) {
 	return 0, fmt.Errorf("Value not implemented")
 }
 
@@ -207,13 +207,13 @@ func (s *esp32WifiEsp32Wifi) StreamTicks(ctx context.Context, interrupts []board
 	return fmt.Errorf("StreamTicks not implemented")
 }
 
-type gpioPinClient struct {
+type wifiGPIOPinClient struct {
 	*esp32WifiEsp32Wifi
 	boardName string
 	pinName   string
 }
 
-func (s *gpioPinClient) Set(ctx context.Context, high bool, extra map[string]interface{}) error {
+func (s *wifiGPIOPinClient) Set(ctx context.Context, high bool, extra map[string]interface{}) error {
 	state := 0
 	if high {
 		state = 100
@@ -260,7 +260,7 @@ func (s *gpioPinClient) Set(ctx context.Context, high bool, extra map[string]int
 	return nil
 }
 
-func (s *gpioPinClient) Get(ctx context.Context, extra map[string]interface{}) (bool, error) {
+func (s *wifiGPIOPinClient) Get(ctx context.Context, extra map[string]interface{}) (bool, error) {
 	endpoint := fmt.Sprintf("%s/read-pins", s.url)
 	pinNum, err := strconv.Atoi(s.pinName)
 	if err != nil {
@@ -305,7 +305,7 @@ func (s *gpioPinClient) Get(ctx context.Context, extra map[string]interface{}) (
 	return response["pin_reads"].([]interface{})[0].(map[string]interface{})["state"].(float64) == 100, nil
 }
 
-func (s *gpioPinClient) PWM(ctx context.Context, extra map[string]interface{}) (float64, error) {
+func (s *wifiGPIOPinClient) PWM(ctx context.Context, extra map[string]interface{}) (float64, error) {
 	endpoint := fmt.Sprintf("%s/read-pins", s.url)
 	pinNum, err := strconv.Atoi(s.pinName)
 	if err != nil {
@@ -350,7 +350,7 @@ func (s *gpioPinClient) PWM(ctx context.Context, extra map[string]interface{}) (
 	return response["pin_reads"].([]interface{})[0].(map[string]interface{})["state"].(float64), nil
 }
 
-func (s *gpioPinClient) SetPWM(ctx context.Context, dutyCyclePct float64, extra map[string]interface{}) error {
+func (s *wifiGPIOPinClient) SetPWM(ctx context.Context, dutyCyclePct float64, extra map[string]interface{}) error {
 	endpoint := fmt.Sprintf("%s/write-pins", s.url)
 	pinNum, err := strconv.Atoi(s.pinName)
 	if err != nil {
@@ -393,11 +393,11 @@ func (s *gpioPinClient) SetPWM(ctx context.Context, dutyCyclePct float64, extra 
 	return nil
 }
 
-func (s *gpioPinClient) PWMFreq(ctx context.Context, extra map[string]interface{}) (uint, error) {
+func (s *wifiGPIOPinClient) PWMFreq(ctx context.Context, extra map[string]interface{}) (uint, error) {
 	return 0, fmt.Errorf("PWMFreq not implemented")
 }
 
-func (s *gpioPinClient) SetPWMFreq(ctx context.Context, freqHz uint, extra map[string]interface{}) error {
+func (s *wifiGPIOPinClient) SetPWMFreq(ctx context.Context, freqHz uint, extra map[string]interface{}) error {
 	return fmt.Errorf("SetPWMFreq not implemented")
 }
 
