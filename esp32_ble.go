@@ -282,7 +282,7 @@ func (s *bleGPIOPinClient) Set(ctx context.Context, high bool, extra map[string]
 	}
 	body_string, err := json.Marshal(body)
 
-	targetChar.Write(body_string)
+	targetChar.WriteWithoutResponse(body_string)
 	return nil
 }
 
